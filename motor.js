@@ -252,7 +252,7 @@ export function montarTest({ preguntas, enlaceExtendido = false, ejesExtra = [] 
 
   function crearPostit(cuenta, lecturas) {
     const nota = document.createElement("aside");
-    nota.className = "postit";
+    nota.className = preguntas.length > 8 ? "postit postit-denso" : "postit";
 
     const titulo = document.createElement("h3");
     titulo.textContent = "Tus elecciones";
@@ -300,6 +300,182 @@ export function montarTest({ preguntas, enlaceExtendido = false, ejesExtra = [] 
         texto: textoInclinacion(cuenta, eje.nombreIzq, eje.nombreDer),
         frase: eje.frase(cuenta),
       };
+    });
+  }
+
+  function partirLineas(ctx, texto, maximo) {
+    const lineas = [];
+    let actual = "";
+    texto.split(" ").forEach((palabra) => {
+      const prueba = actual ? `${actual} ${palabra}` : palabra;
+      if (ctx.measureText(prueba).width > maximo && actual) {
+        lineas.push(actual);
+        actual = palabra;
+      } else {
+        actual = prueba;
+      }
+    });
+    if (actual) lineas.push(actual);
+    return lineas;
+  }
+
+  function barrasResultado(cuenta, lecturas) {
+    return [
+      {
+        nombreIzq: "Paco",
+        nombreDer: "Manolo",
+        cuenta,
+        colorIzq: "#6a9a7c",
+        colorDer: "#7aa3c0",
+        texto: textoInclinacion(cuenta, "Paco", "Manolo"),
+      },
+      ...lecturas.map((lectura) => ({
+        nombreIzq: lectura.nombreIzq,
+        nombreDer: lectura.nombreDer,
+        cuenta: lectura.cuenta,
+        colorIzq: lectura.colorIzq,
+        colorDer: lectura.colorDer,
+        texto: lectura.texto,
+      })),
+    ];
+  }
+
+  function eleccionesTarjeta() {
+    return preguntas.map((pregunta, indice) => ({
+      texto: `${indice + 1}. ${pregunta.aspecto}`,
+      lado: estado.respuestas[indice] === "paco" ? "Paco" : "Manolo",
+      color: estado.respuestas[indice] === "paco" ? "#3f6b50" : "#3f6888",
+    }));
+  }
+
+  function recortarTexto(ctx, texto, maximo) {
+    if (ctx.measureText(texto).width <= maximo) return texto;
+    let corte = texto;
+    while (corte.length > 1 && ctx.measureText(`${corte}…`).width > maximo) {
+      corte = corte.slice(0, -1);
+    }
+    return `${corte}…`;
+  }
+
+  function crearTarjeta(veredicto, barras, elecciones) {
+    const ancho = 1080;
+    const margen = 80;
+    const medida = document.createElement("canvas").getContext("2d");
+    medida.font = "700 52px Segoe UI, Trebuchet MS, sans-serif";
+    const lineas = partirLineas(medida, veredicto, ancho - margen * 2);
+    const columnas = elecciones.length > 6 ? 2 : 1;
+    const filas = Math.ceil(elecciones.length / columnas);
+    const altoLista = 70 + filas * 38;
+    const altoContenido = 120 + lineas.length * 68 + barras.length * 196 + altoLista;
+    const alto = Math.max(1350, altoContenido + 120);
+    const desplazar = Math.max(0, (alto - altoContenido - 80) / 2);
+    const canvas = document.createElement("canvas");
+    canvas.width = ancho;
+    canvas.height = alto;
+    const ctx = canvas.getContext("2d");
+
+    ctx.fillStyle = "#fff4e8";
+    ctx.fillRect(0, 0, ancho, alto);
+
+    const brillo = ctx.createRadialGradient(ancho, 0, 40, ancho, 0, 520);
+    brillo.addColorStop(0, "#b7daf2");
+    brillo.addColorStop(1, "rgba(183, 218, 242, 0)");
+    ctx.fillStyle = brillo;
+    ctx.fillRect(0, 0, ancho, 420);
+
+    ctx.fillStyle = "#6d6258";
+    ctx.font = "700 28px Segoe UI, Trebuchet MS, sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText(`Test de ${preguntas.length} decisiones`, margen, 72 + desplazar);
+
+    ctx.fillStyle = "#3d342c";
+    ctx.font = "700 52px Segoe UI, Trebuchet MS, sans-serif";
+    lineas.forEach((linea, indice) => {
+      ctx.fillText(linea, margen, 156 + desplazar + indice * 68);
+    });
+
+    let y = 156 + desplazar + lineas.length * 68 + 36;
+    barras.forEach((barra) => {
+      const pistaX = margen;
+      const pistaAncho = ancho - margen * 2;
+      const pistaY = y + 58;
+      const pistaAlto = 22;
+      const progreso = barra.cuenta.total === 0 ? 0.5 : barra.cuenta.derecha / barra.cuenta.total;
+
+      ctx.font = "800 30px Segoe UI, Trebuchet MS, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillStyle = barra.colorIzq;
+      ctx.fillText(barra.nombreIzq, pistaX, y + 28);
+      ctx.textAlign = "right";
+      ctx.fillStyle = barra.colorDer;
+      ctx.fillText(barra.nombreDer, pistaX + pistaAncho, y + 28);
+
+      const degradado = ctx.createLinearGradient(pistaX, 0, pistaX + pistaAncho, 0);
+      degradado.addColorStop(0, barra.colorIzq);
+      degradado.addColorStop(1, barra.colorDer);
+      ctx.fillStyle = degradado;
+      ctx.beginPath();
+      ctx.roundRect(pistaX, pistaY, pistaAncho, pistaAlto, 999);
+      ctx.fill();
+
+      const puntoX = pistaX + progreso * pistaAncho;
+      ctx.beginPath();
+      ctx.arc(puntoX, pistaY + pistaAlto / 2, 20, 0, Math.PI * 2);
+      ctx.fillStyle = "#fff";
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(puntoX, pistaY + pistaAlto / 2, 13, 0, Math.PI * 2);
+      ctx.fillStyle = colorPulgar(barra.cuenta, barra.colorIzq, barra.colorDer);
+      ctx.fill();
+
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#6d6258";
+      ctx.font = "700 26px Segoe UI, Trebuchet MS, sans-serif";
+      ctx.fillText(barra.texto, ancho / 2, pistaY + 72);
+      y += 196;
+    });
+
+    y += 16;
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#3d342c";
+    ctx.font = "700 28px Segoe UI, Trebuchet MS, sans-serif";
+    ctx.fillText("Tus elecciones", margen, y);
+    y += 42;
+
+    const hueco = 36;
+    const anchoColumna = (ancho - margen * 2 - (columnas - 1) * hueco) / columnas;
+    ctx.font = "600 24px Segoe UI, Trebuchet MS, sans-serif";
+    elecciones.forEach((eleccion, indice) => {
+      const columna = indice % columnas;
+      const fila = Math.floor(indice / columnas);
+      const x = margen + columna * (anchoColumna + hueco);
+      const lineaY = y + fila * 38;
+      const lado = `  ${eleccion.lado}`;
+      const anchoLado = ctx.measureText(lado).width;
+      const aspecto = recortarTexto(ctx, eleccion.texto, anchoColumna - anchoLado);
+      ctx.fillStyle = "#3d342c";
+      ctx.fillText(aspecto, x, lineaY);
+      ctx.fillStyle = eleccion.color;
+      ctx.fillText(lado, x + ctx.measureText(aspecto).width, lineaY);
+    });
+
+    ctx.textAlign = "center";
+    ctx.fillStyle = "rgba(109, 98, 88, 0.7)";
+    ctx.font = "600 24px Segoe UI, Trebuchet MS, sans-serif";
+    ctx.fillText("® Thomas Sowell's Visions  ·  Github", ancho / 2, alto - 48);
+    return canvas;
+  }
+
+  function descargarTarjeta(veredicto, barras) {
+    const canvas = crearTarjeta(veredicto, barras, eleccionesTarjeta());
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const enlace = document.createElement("a");
+      enlace.href = url;
+      enlace.download = "resultado-visiones.png";
+      enlace.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
     });
   }
 
@@ -380,7 +556,14 @@ export function montarTest({ preguntas, enlaceExtendido = false, ejesExtra = [] 
     reiniciar.type = "button";
     reiniciar.textContent = "Empezar de nuevo";
     reiniciar.addEventListener("click", reiniciarTest);
-    reiniciarWrap.append(reiniciar);
+    const descargar = document.createElement("button");
+    descargar.className = "boton boton-secundario";
+    descargar.type = "button";
+    descargar.textContent = "Descargar imagen";
+    descargar.addEventListener("click", () => {
+      descargarTarjeta(textoVeredicto(cuenta), barrasResultado(cuenta, lecturas));
+    });
+    reiniciarWrap.append(reiniciar, descargar);
 
     if (enlaceExtendido) {
       const extendido = document.createElement("a");

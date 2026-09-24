@@ -383,6 +383,10 @@ h1 {
   align-items: start;
 }
 
+.resultado-rejilla:has(.postit-denso) {
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+}
+
 .explicacion {
   margin-bottom: 0.9rem;
   padding: 1rem 1.05rem;
@@ -458,6 +462,40 @@ h1 {
   font-size: 0.92rem;
 }
 
+.postit-denso {
+  width: 100%;
+  min-height: 0;
+  gap: 0.4rem;
+  padding: 1.2rem 0.95rem 0.9rem;
+}
+
+.postit-denso h3 {
+  font-size: 1rem;
+}
+
+.postit-denso .eleccion {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.65rem;
+  margin: 0;
+  padding-bottom: 0.28rem;
+  font-size: 0.78rem;
+  line-height: 1.25;
+}
+
+.postit-denso .eleccion strong {
+  display: inline;
+  font-size: inherit;
+  font-weight: 500;
+}
+
+.postit-denso .eleccion span {
+  flex: none;
+  font-size: inherit;
+  font-weight: 700;
+}
+
 .aviso-copia {
   min-height: 1.2rem;
   margin: 0;
@@ -496,6 +534,36 @@ h1 {
   margin-top: 1.4rem;
 }
 
+.pie {
+  position: fixed;
+  right: 0;
+  bottom: 0.4rem;
+  left: 0;
+  z-index: 3;
+  margin: 0;
+  color: rgba(109, 98, 88, 0.72);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  text-align: center;
+}
+
+.pie-sep {
+  margin: 0 0.45rem;
+  color: rgba(109, 98, 88, 0.4);
+}
+
+.pie a {
+  color: inherit;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.pie a:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 760px) {
   .pagina {
     width: min(var(--ancho), calc(100% - 1.25rem));
@@ -509,6 +577,14 @@ h1 {
 
   .postit {
     width: min(240px, 100%);
+  }
+
+  .resultado-rejilla:has(.postit-denso) {
+    grid-template-columns: 1fr;
+  }
+
+  .postit-denso {
+    width: 100%;
   }
 }
 
