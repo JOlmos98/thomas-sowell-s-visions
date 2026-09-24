@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Versión extendida: Visión de Paco o Visión de Manolo</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="pagina">
+      <header class="cabecera">
+        <p class="etiqueta">Un test de veinticinco decisiones</p>
+        <h1>¿Con quién estás más de acuerdo?</h1>
+        <p class="intro">
+          En verde, la Visión de Paco. En azul, la Visión de Manolo.
+          En cada tema, marca la que te encaja más. La siguiente pregunta
+          se abre cuando eliges la anterior.
+        </p>
+      </header>
+
+      <section id="preguntas" class="preguntas" aria-label="Decisiones del test"></section>
+
+      <div class="acciones">
+        <button id="finalizar" class="boton boton-principal" type="button" disabled>
+          Finalizar test
+        </button>
+      </div>
+
+      <section id="resultado" class="resultado" hidden aria-live="polite"></section>
+    </main>
+    <script type="module" src="extended.js"></script>
+  </body>
+</html>
